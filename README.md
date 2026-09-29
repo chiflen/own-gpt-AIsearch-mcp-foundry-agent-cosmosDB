@@ -1,11 +1,11 @@
-# CFTC AI Assistant + Agent
+# TechWyns AI Assistant + Agent
 
 **Developed by Norman Fletcher**
 
 A unified, tabbed **Gradio** application that combines three powerful capabilities for
-CFTC legal-document work:
+TechWyns legal-document work:
 
-1. **📄 CFTC RAG Document Q&A** — a Retrieval-Augmented Generation (RAG) chatbot over CFTC
+1. **📄 TechWyns RAG Document Q&A** — a Retrieval-Augmented Generation (RAG) chatbot over TechWyns
    legal documents (enforcement actions) stored in an **Azure Cosmos DB** vector store, using
    **Azure OpenAI** for embeddings + chat completions, with smart caching, document upload,
    conversion, and translation.
@@ -69,7 +69,7 @@ CFTC legal-document work:
 - **AI Chatbot** — Uses the **Azure OpenAI** LLM to generate responses to user queries based
   on a defined system prompt.
 - **Document Retrieval (Cosmos DB)** — When enabled, the agent calls a `cosmos_vector_search`
-  tool that retrieves relevant CFTC document chunks from Cosmos DB (reusing the RAG core) and
+  tool that retrieves relevant TechWyns document chunks from Cosmos DB (reusing the RAG core) and
   feeds them back for a grounded final answer.
 - **Customizable System Prompt** — Define the behavior and personality of the AI agent.
 - **Model Selection** — Choose between several Azure OpenAI deployments (default from `.env`,
@@ -123,7 +123,7 @@ Reads the `.env` file for all Azure credentials and settings:
 
 ### 2. Azure Cosmos DB Setup — `rag_core.py`
 Two vector-enabled containers are created (lazily, on first use):
-- **CFTC container** — stores ingested document chunks with their vector embeddings.
+- **TechWyns container** — stores ingested document chunks with their vector embeddings.
 - **Cache container** — stores chat history and cached Q&A pairs (with vectors) for fast repeat answers.
 - Both use a **vector embedding policy** (cosine distance, `float32`) and a **vector index
   policy** (`quantizedFlat`). Partition key is `/id`.
@@ -139,7 +139,7 @@ Two vector-enabled containers are created (lazily, on first use):
 - Scans `source_documents/` recursively for `.pdf` and `.txt` files.
 - Extracts text (`pdfminer` for PDF, plain read for TXT).
 - Splits text into **overlapping chunks** (`CHUNK_SIZE=1500`, `CHUNK_OVERLAP=200`).
-- Embeds each chunk and **upserts** it into the CFTC container (idempotent by UUID).
+- Embeds each chunk and **upserts** it into the TechWyns container (idempotent by UUID).
 - Builds a Blob URL for each source so responses can include clickable citations.
 - Runs automatically on startup and on demand via the UI.
 
@@ -171,7 +171,7 @@ Two vector-enabled containers are created (lazily, on first use):
 - `get_response_from_ai_agent(...)` implements a **native OpenAI function-calling** agent
   (no langchain/langgraph/groq/tavily dependency).
 - When `allow_search=True`, the agent calls the `cosmos_vector_search` tool (reusing
-  `rag_core.generate_embeddings` + `vector_search`) to retrieve grounded CFTC context.
+  `rag_core.generate_embeddings` + `vector_search`) to retrieve grounded TechWyns context.
 - Bounded tool-calling loop (max 4 iterations) to avoid infinite loops.
 
 ### 12. Sentiment Engine — `sentiment/sentiment_analysis.py`
@@ -202,7 +202,7 @@ Two vector-enabled containers are created (lazily, on first use):
   making the app importable and startable even during transient network/DNS outages.
 - **Idempotent ingestion**: Documents are upserted by generated UUID, so re-running the app or
   re-ingesting is safe (no duplicates).
-- **Two container separation**: The CFTC container holds the knowledge base; the cache
+- **Two container separation**: The TechWyns container holds the knowledge base; the cache
   container holds conversation history and cached answers — keeping concerns separate and
   improving cache-hit latency.
 - **Resilience**: `tenacity` retries smooth over transient failures on embeddings and LLM calls.
@@ -221,7 +221,7 @@ Two vector-enabled containers are created (lazily, on first use):
 +------------------------------------------+        +------------------------------------------+
 | - demo : gr.Blocks (3 tabs)               |        | - config : dict (from .env)               |
 | - rag_user()                             |        | - openai_client : AzureOpenAI             |
-| - upload_and_ingest()                    |  uses  | - cftc_container : _LazyContainer         |
+| - upload_and_ingest()                    |  uses  | - TechWyns_container : _LazyContainer         |
 | - do_convert()                           | -----> | - cache_container : _LazyContainer        |
 | - do_translate()                         |        | - generate_embeddings(text)               |
 | - agent_respond()                        |        | - ingest_documents()                      |
@@ -259,7 +259,7 @@ Two vector-enabled containers are created (lazily, on first use):
         |
         |  ingested on startup (and on demand via Upload & Ingest)
         v
-[extract_text] -> [split_text (chunk)] -> [generate_embeddings] -> [upsert to Cosmos DB (CFTC container)]
+[extract_text] -> [split_text (chunk)] -> [generate_embeddings] -> [upsert to Cosmos DB (TechWyns container)]
         |
         v
 User asks a question in the UI
@@ -271,7 +271,7 @@ User asks a question in the UI
         |
         | NO
         v
-[vector_search: find similar chunks in CFTC container]
+[vector_search: find similar chunks in TechWyns container]
         |
         v
 [get_chat_history: recent context from cache container]
@@ -301,7 +301,7 @@ User message + system prompt + model + allow_search
 [LLM decides to call cosmos_vector_search tool]
         |
         v
-[generate_embeddings(query)] -> [vector_search(CFTC container)]
+[generate_embeddings(query)] -> [vector_search(TechWyns container)]
         |
         v
 [Tool results fed back to LLM]
@@ -433,7 +433,7 @@ openai_completions_deployment=gpt-4o-mini
 # (Optional) Blob Storage — for source documents + clickable citations
 blob_storage_url=https://<account>.blob.core.windows.net
 blob_storage_container_name=<container>
-blob_folder_path=https://<account>.blob.core.windows.net/<container>/csl-source/
+blob_folder_path=https://<account>.blob.core.windows.net/<container>/twproj-source/
 blob_storage_connection_string=<connection-string>
 
 # (Optional) Azure Document Intelligence / Form Recognizer — for OCR
@@ -462,7 +462,7 @@ This will:
 3. Set up lazy Cosmos connections (created on first use).
 4. Ingest all documents from `source_documents/` (if any).
 5. Launch the unified Gradio UI at **http://127.0.0.1:7861** with three tabs:
-   - **CFTC Document Q&A** (RAG chatbot)
+   - **TechWyns Document Q&A** (RAG chatbot)
    - **AI Agent (Doc Retrieval)** (Azure OpenAI + Cosmos retrieval)
    - **Sentiment Analysis**
 
@@ -563,7 +563,7 @@ and exits.
 ### AI Agent
 1. Set the **System Prompt** (agent personality).
 2. Choose the **Model** deployment.
-3. Toggle **Allow Document Retrieval (Cosmos DB)** to ground answers in the CFTC knowledge base.
+3. Toggle **Allow Document Retrieval (Cosmos DB)** to ground answers in the TechWyns knowledge base.
 4. Type a message and click **Send** (or press Enter).
 
 ### Sentiment Analysis
@@ -579,7 +579,7 @@ and exits.
 keeps the Cosmos knowledge base in sync with new/updated documents in blob storage:
 
 - **Blob trigger** (`blob_trigger_ingest`) fires on `Microsoft.Storage.BlobCreated` events for
-  the `csl14/csl-source` container.
+  the `twproj14/twproj-source` container.
 - **Reads** the blob content, then calls **Azure Document Intelligence (Form Recognizer)** to
   extract text/content.
 - **Upserts** a metadata record into Cosmos DB (stable, idempotent `blob-<hash>` id) including
@@ -594,7 +594,7 @@ keeps the Cosmos knowledge base in sync with new/updated documents in blob stora
 ## Project Structure
 
 ```
-Langgraph_Agent_cftc/
+Langgraph_Agent_TechWyns/
 ├── app.py                        # Unified Gradio application (3 tabs: RAG Q&A + AI Agent + Sentiment)
 ├── rag_core.py                   # Shared RAG backend (Cosmos, embeddings, ingest, cache, convert, translate)
 ├── ai_agent.py                   # Azure OpenAI agent with Cosmos vector-search tool (function-calling)
@@ -636,7 +636,7 @@ Langgraph_Agent_cftc/
   (usage-based charges apply).
 - **Frontend**: Beyond Gradio, SimpleChat or OpenWebUI could serve as alternative UIs.
 - The original Azure configuration guide for each component/infrastructure is available at the
-  CFTC SharePoint configuration document (see the earlier project notes).
+  TechWyns SharePoint configuration document (see the earlier project notes).
 
 ---
 
@@ -655,7 +655,7 @@ and exits.
 
 ## Disclaimer
 
-This is a test/validation project to demonstrate a RAG chatbot over CFTC legal documents, an
+This is a test/validation project to demonstrate a RAG chatbot over TechWyns legal documents, an
 AI retrieval agent, and sentiment analysis. It is **not production-ready**. Answers and
 sentiment determinations are generated by AI models and should be reviewed by a qualified
 professional before any legal reliance.
