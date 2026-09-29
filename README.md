@@ -16,7 +16,7 @@ TechWyns legal-document work:
    using a local offline engine (**VADER + TextBlob**) or **Azure OpenAI**, with automatic text
    extraction via **Azure Document Intelligence** for PDFs and images.
 
-> **Note:** This is the modern rewrite of the original local/private Streamlit prototype. The
+> **Note:** The
 > current version uses **Azure OpenAI**, **Azure Cosmos DB**, **Azure Blob Storage**, and
 > **Azure Document Intelligence** (cloud) for high-quality, grounded answers and document
 > processing.
