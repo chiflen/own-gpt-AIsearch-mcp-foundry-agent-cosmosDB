@@ -1,11 +1,11 @@
-# CFTCGPT — AI-Powered Legal Document Assistant + Langgraph Agent
+# TechWynsGPT — AI-Powered Legal Document Assistant + Langgraph Agent
 
 **Developed by Norman Fletcher**
 
-The CFTC AI Assistant is a unified, tabbed Gradio application that combines two powerful
+The TechWyns AI Assistant is a unified, tabbed Gradio application that combines two powerful
 capabilities:
 
-1. **CFTC RAG Document Q&A** — a Retrieval-Augmented Generation (RAG) chatbot over CFTC legal
+1. **TechWyns RAG Document Q&A** — a Retrieval-Augmented Generation (RAG) chatbot over TechWyns legal
    documents (enforcement actions) stored in an Azure Cosmos DB vector store, using **Azure
    OpenAI** for embeddings + chat completions.
 2. **AI Agent (Web Search)** — a Langgraph agent powered by the **Groq LLM** with **Tavily**
@@ -59,7 +59,7 @@ capabilities:
   search results and present them in a user-friendly format.
 - **Customizable System Prompt** — Allows users to define the behavior and personality of the
   AI agent through a customizable system prompt.
-- **Model Selection** — Choose between several Groq models (e.g.,gpt-5-csl14', `llama-3.1-8b-instant`,
+- **Model Selection** — Choose between several Groq models (e.g.,gpt-5-TW14', `llama-3.1-8b-instant`,
   `llama-3.3-70b-versatile`, `mixtral-8x7b-32768`, `gemma2-9b-it`, `llama3-70b-8192`).
 - **Formatted Responses** — Formats web search results to include titles, snippets, and links,
   making the information easy to read and navigate.
@@ -98,7 +98,7 @@ When a new/updated blob arrives (e.g., a normalized Markdown chunk or PDF), crea
 
 ### 2. Azure Cosmos DB Setup
 - Two containers are created (if they don't exist):
-  - **CFTC container** — stores the actually ingested document chunks with their vector embeddings.
+  - **TechWyns container** — stores the actually ingested document chunks with their vector embeddings.
   - **Cache container** — stores chat history and cached Q&A pairs (with vectors) for fast repeat answers.
 - Both containers use a **vector index policy** (`quantizedFlat`) and a **vector embedding policy**
   (cosine distance, `float32`). The partition key is `/id`.
@@ -111,7 +111,7 @@ When a new/updated blob arrives (e.g., a normalized Markdown chunk or PDF), crea
 - Scans `source_documents/` recursively for `.pdf` and `.txt` files.
 - For each file: extracts text (pdfminer for PDF, plain read for TXT).
 - Splits text into **overlapping chunks** (`CHUNK_SIZE=1500`, `CHUNK_OVERLAP=200`).
-- For each chunk: generates an embedding and **upserts** it into the CFTC container.
+- For each chunk: generates an embedding and **upserts** it into the TechWyns container.
 - Upsert-by-id makes the process **idempotent** — re-running doesn't duplicate documents.
 - Runs automatically on startup.
 
@@ -162,7 +162,7 @@ When a new/updated blob arrives (e.g., a normalized Markdown chunk or PDF), crea
         |
         |  ingested on startup (and on demand via Upload & Ingest)
         v
-[extract_text] -> [split_text] -> [generate_embeddings] -> [upsert to Cosmos DB (CFTC container)]
+[extract_text] -> [split_text] -> [generate_embeddings] -> [upsert to Cosmos DB (TechWyns container)]
         |
         v
 User asks a question in the UI
@@ -174,7 +174,7 @@ User asks a question in the UI
         |
         | NO
         v
-[vector_search: find similar chunks in CFTC container]
+[vector_search: find similar chunks in TechWyns container]
         |
         v
 [get_chat_history: recent context]
@@ -223,7 +223,7 @@ User        Gradio UI        rag-chatbot.py          Azure OpenAI        Cosmos 
   cache) are external cloud services accessed via APIs.
 - **Idempotent ingestion**: Documents are upserted by generated UUID, so re-running the app
   or re-ingesting is safe.
-- **Two container separation**: The CFTC container holds the knowledge base; the cache
+- **Two container separation**: The TechWyns container holds the knowledge base; the cache
   container holds conversation history and cached answers — keeping concerns separate and
   improving cache hit latency.
 - **Resilience**: tenacity retries smooth over transient network failures on embeddings and LLM calls.
@@ -299,7 +299,7 @@ This will:
 2. Connect to Cosmos DB and create containers if needed.
 3. Ingest all documents from `source_documents/` (if any).
 4. Launch the unified Gradio UI at **http://127.0.0.1:7861** with two tabs:
-   - **CFTC Document Q&A** (RAG chatbot)
+   - **TechWyns Document Q&A** (RAG chatbot)
    - **AI Agent (Web Search)** (Groq + Tavily)
 
 > **Note:** The Groq/Tavily web-search agent requires `GROQ_API_KEY` and `TAVILY_API_KEY` to
@@ -360,7 +360,7 @@ This launches the app, runs checks, prints `PASS` or `FAIL`, and exits.
 ## Project Structure
 
 ```
-cftc-gpt/
+TechWyns-gpt/
 ├── app.py                 # Unified Gradio application (2 tabs: RAG Q&A + AI Agent)
 ├── rag_core.py            # Shared RAG backend logic (Cosmos, embeddings, ingest, cache, convert, translate)
 ├── ai_agent.py            # Langgraph agent (Groq LLM + Tavily web search)
@@ -368,7 +368,7 @@ cftc-gpt/
 ├── frontend.py            # Legacy Streamlit frontend for the agent (optional)
 ├── test_app.py            # pytest smoke tests
 ├── rag-chatbot.py         # Legacy standalone RAG Gradio app (kept for reference)
-├── cftc.py                # Legacy Streamlit prototype (not used by the current app)
+├── TechWyns.py                # Legacy Streamlit prototype (not used by the current app)
 ├── ingest.py              # Legacy local Chroma ingestion (not used by the current app)
 ├── constants.py           # Legacy Chroma settings
 ├── requirements.txt       # Python dependencies (RAG)
@@ -479,8 +479,8 @@ Blob events → kick off ingestion: Use the event‑based Blob trigger (Event Gr
 
 ## Disclaimer
 
-This is a test project to validate the feasibility of a RAG chatbot over CFTC legal documents.
+This is a test project to validate the feasibility of a RAG chatbot over TechWyns legal documents.
 It is **not production-ready**. Answers are generated by an AI model and should be reviewed by
 a qualified professional before any legal reliance.
-# Here is the detailed azure admin config guide for each component and infrastructure - https://cftcusgov-my.sharepoint.com/:w:/r/personal/nfletcher_cftc_gov/Documents/csl-usecase14-configuration.docx?d=wf39817a37eb94502894bbaffbb31b25a&csf=1&web=1&e=KCPAF9 
+# Here is the detailed azure admin config guide for each component and infrastructure - https://TechWynsusgov-my.sharepoint.com/:w:/r/personal/nfletcher_TechWyns_gov/Documents/TW-TW114-configuration.docx?d=wf39817a37eb94502894bbaffbb31b25a&csf=1&web=1&e=KCPAF9 
 #https://learn.microsoft.com/en-us/azure/cosmos-db/gen-ai/rag-chatbot
