@@ -13,7 +13,7 @@ class RequestState(BaseModel):
     allow_search: bool
 
 # Deployments available in this Azure OpenAI resource.
-# The default is the CFTC completions deployment from .env.
+# The default is the TechWyns completions deployment from .env.
 # Includes the original Groq model names for backward compatibility.
 ALLOWED_MODEL_NAMES = [
     openai_completions_deployment or "gpt-5-csl14",
