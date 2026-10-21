@@ -1,4 +1,4 @@
-"""Starts the unified CFTC AI Assistant + Agent server in the background and writes the PID to server.pid."""
+"""Starts the unified TechWyns AI Assistant + Agent server in the background and writes the PID to server.pid."""
 import subprocess
 import sys
 import os
@@ -25,4 +25,4 @@ with open('server.pid', 'w') as f:
 
 print(f"Server started with PID {proc.pid}")
 print("Logs: server.log / server.log.err")
-print("Web app: http://127.0.0.1:7861 (CFTC RAG Q&A + AI Agent tabs)")
+print("Web app: http://127.0.0.1:7861 (TechWyns RAG Q&A + AI Agent tabs)")
