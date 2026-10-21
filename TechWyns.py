@@ -30,7 +30,7 @@ from constants import CHROMA_SETTINGS
 
 secret = ''
 st.set_page_config(
-    page_title="CFTC AI Assistant",
+    page_title="TechWyns AI Assistant",
     page_icon=":robot:"
 )
 
@@ -59,7 +59,7 @@ def private_gpt_generate_msg(human_msg):
 	
 
 
-st.header("CFTC GPT App Private")
+st.header("TechWyns GPT App Private")
 
 if 'Bot_msg' not in st.session_state:
     st.session_state['Bot_msg'] = []
