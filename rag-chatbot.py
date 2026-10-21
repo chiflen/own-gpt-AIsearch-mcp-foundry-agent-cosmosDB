@@ -160,11 +160,11 @@ indexing_policy = {
 
 # Create the data collection with vector index (note: this creates a container with an autoscale limit of 20,000 RUs to allow fast data load)
 try:
-    cftc_container = db.create_container_if_not_exists(id=cosmos_collection, 
+    TechWyns_container = db.create_container_if_not_exists(id=cosmos_collection, 
                                                   partition_key=PartitionKey(path='/id'),
                                                   indexing_policy=indexing_policy, 
                                                   vector_embedding_policy=vector_embedding_policy) 
-    print('Container with id \'{0}\' created'.format(cftc_container.id)) 
+    print('Container with id \'{0}\' created'.format(TechWyns_container.id)) 
 
 except exceptions.CosmosHttpResponseError: 
     raise 
@@ -277,7 +277,7 @@ def ingest_documents():
     for obj in items:
         obj[cosmos_vector_property] = generate_embeddings(obj['content'])
         # id is already the partition key
-        cftc_container.upsert_item(body=obj)
+        TechWyns_container.upsert_item(body=obj)
         counter += 1
         if counter % 10 == 0:
             print(f"  upserted {counter}/{len(items)}")
@@ -334,8 +334,8 @@ def get_chat_history(container, completions=3):
 
 def generate_completion(user_prompt, vector_search_results, chat_history):
     system_prompt = '''
-    You are an intelligent assistant for CFTC legal documents. You are designed to provide helpful
-    answers to user questions about the documents in your database (CFTC enforcement actions).
+    You are an intelligent assistant for TechWyns legal documents. You are designed to provide helpful
+    answers to user questions about the documents in your database (TechWyns enforcement actions).
     You are friendly, helpful, and informative and can be lighthearted. Be concise in your
     responses, but still friendly.
      - Only answer questions related to the information provided below. Provide at least 3 document
@@ -356,7 +356,7 @@ def generate_completion(user_prompt, vector_search_results, chat_history):
     )    
     return response.model_dump()
 
-def chat_completion(cache_container, cftcdoc_container, user_input):
+def chat_completion(cache_container, TechWynsdoc_container, user_input):
     print("starting completion")
     # Generate embeddings from the user input
     user_embeddings = generate_embeddings(user_input)
@@ -367,9 +367,9 @@ def chat_completion(cache_container, cftcdoc_container, user_input):
         return cache_results[0]['completion'], True
         
     else:
-        # Perform vector search on the cftc collection
+        # Perform vector search on the TechWyns collection
         print("New result\n")
-        search_results = vector_search(cftc_container, user_embeddings)
+        search_results = vector_search(TechWyns_container, user_embeddings)
 
         print("Getting Chat History\n")
         # Chat history
@@ -492,7 +492,7 @@ def _text_to_format(text, fmt):
         return text
     if fmt == 'eml':
         msg = _email.message_from_string(
-            "From: cftc-assistant@localhost\n"
+            "From: TechWyns-assistant@localhost\n"
             "To: user@localhost\n"
             "Subject: Converted Document\n"
             "MIME-Version: 1.0\n"
@@ -565,10 +565,10 @@ def translate_text(text, source_lang, target_lang):
 
 chat_history = []
 
-with gr.Blocks(title="CFTC AI Assistant") as demo:
-    gr.Markdown("# CFTC AI Assistant")
+with gr.Blocks(title="TechWyns AI Assistant") as demo:
+    gr.Markdown("# TechWyns AI Assistant")
     gr.Markdown("*Developer: Norman Fletcher 1*")
-    chatbot = gr.Chatbot(label="CFTC AI Assistant", type="tuples")
+    chatbot = gr.Chatbot(label="TechWyns AI Assistant", type="tuples")
     with gr.Row():
         msg = gr.Textbox(label="Ask me about legal document content in the Database!", scale=4)
         enter_btn = gr.Button("Enter", scale=1)
@@ -576,7 +576,7 @@ with gr.Blocks(title="CFTC AI Assistant") as demo:
 
     def user(user_message, chat_history):
         start_time = time.time()
-        response_payload, cached = chat_completion(cache_container, cftc_container, user_message)
+        response_payload, cached = chat_completion(cache_container, TechWyns_container, user_message)
         end_time = time.time()
         elapsed_time = round((end_time - start_time) * 1000, 2)
         details = f"\n (Time: {elapsed_time}ms)"
@@ -735,7 +735,7 @@ def smoke_test(port=7861):
         # Run chat_completion in a worker to avoid blocking the event loop
         def _ask(n):
             global _smoke_result
-            _smoke_result = chat_completion(cache_container, cftc_container, n)
+            _smoke_result = chat_completion(cache_container, TechWyns_container, n)
         worker = threading.Thread(target=_ask, args=(test_q,), daemon=True)
         worker.start()
         worker.join(timeout=90)
