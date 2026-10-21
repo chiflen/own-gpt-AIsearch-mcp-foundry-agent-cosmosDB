@@ -9,7 +9,7 @@ groq / tavily packages.
 Behaviour:
   * The agent is defined by a customizable system prompt.
   * When "allow_search" is enabled, the agent can call a `cosmos_vector_search`
-    tool that retrieves relevant CFTC document chunks from Cosmos DB (reusing the
+    tool that retrieves relevant TechWyns document chunks from Cosmos DB (reusing the
     RAG core). The retrieved snippets are fed back to the model for a grounded
     final answer.
   * The LLM is Azure OpenAI (from the shared `.env` config in rag_core).
@@ -21,7 +21,7 @@ import logging
 from rag_core import (
     openai_client,
     openai_completions_deployment,
-    cftc_container,
+    TechWyns_container,
     generate_embeddings,
     vector_search,
 )
@@ -32,15 +32,15 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------
-# Tool implementation: Cosmos DB vector search over the CFTC corpus
+# Tool implementation: Cosmos DB vector search over the TechWyns corpus
 # ---------------------------------------------------------------------
 COSMOS_TOOL_SPEC = {
     "type": "function",
     "function": {
         "name": "cosmos_vector_search",
         "description": (
-            "Search the CFTC legal-document knowledge base stored in Cosmos DB. "
-            "Use this for any question about CFTC enforcement actions, legal "
+            "Search the TechWyns legal-document knowledge base stored in Cosmos DB. "
+            "Use this for any question about TechWyns enforcement actions, legal "
             "documents, or content in the database. Returns matching document "
             "snippets with source links."
         ),
@@ -64,19 +64,19 @@ COSMOS_TOOL_SPEC = {
 
 
 def _cosmos_vector_search(query: str, num_results: int = 5) -> str:
-    """Search the CFTC document corpus in Cosmos DB and return formatted results.
+    """Search the TechWyns document corpus in Cosmos DB and return formatted results.
 
     Each result includes the document title, a snippet, and the source blob link.
     """
     try:
         embedding = generate_embeddings(query)
-        results = vector_search(cftc_container, embedding, num_results=num_results)
+        results = vector_search(TechWyns_container, embedding, num_results=num_results)
     except Exception as e:
         logger.error(f"Cosmos vector search failed: {e}", exc_info=True)
         return f"Cosmos vector search failed: {e}"
 
     if not results:
-        return "No relevant documents found in the CFTC knowledge base."
+        return "No relevant documents found in the TechWyns knowledge base."
 
     lines = []
     for r in results:
