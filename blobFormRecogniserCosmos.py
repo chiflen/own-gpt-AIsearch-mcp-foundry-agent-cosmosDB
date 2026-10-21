@@ -6,7 +6,7 @@ Norman Fletcher
 Azure Functions (Python v2) Blob-triggered pipeline that:
 
   1. Reacts to newly created / updated blobs in the Azure Blob Storage
-     container ``csl14/csl-source`` (Blob trigger decorator, Python v2 template).
+     container ``TW14/TW-source`` (Blob trigger decorator, Python v2 template).
   2. Reads the blob (document) content.
   3. Calls Azure Document Intelligence (Form Recognizer) to extract text/content.
   4. Upserts a metadata record into a Cosmos DB container, including:
@@ -75,13 +75,13 @@ BLOB_CONNECTION_STRING = _get_env(
     "blob_storage_connection_string",
 )
 BLOB_ACCOUNT_URL = _get_env(
-    "blob_storage_url", "https://stgaicsldev.blob.core.windows.net"
+    "blob_storage_url", "https://stgaiTWdev.blob.core.windows.net"
 )
-BLOB_CONTAINER = _get_env("blob_storage_container_name", "csl14")
-BLOB_SOURCE_PREFIX = _get_env("blob_folder_path", f"{BLOB_ACCOUNT_URL}/{BLOB_CONTAINER}/csl-source/")
+BLOB_CONTAINER = _get_env("blob_storage_container_name", "TW14")
+BLOB_SOURCE_PREFIX = _get_env("blob_folder_path", f"{BLOB_ACCOUNT_URL}/{BLOB_CONTAINER}/TW-source/")
 
 FR_ENDPOINT = _get_env(
-    "form_recognizer_endpoint", "https://docintel-csl14.cognitiveservices.azure.com/"
+    "form_recognizer_endpoint", "https://docintel-TW14.cognitiveservices.azure.com/"
 )
 FR_KEY = _get_env("form_recognizer_key", "")
 FR_MODEL_ID = _get_env("form_recognizer_model_id", "prebuilt-document")
@@ -92,7 +92,7 @@ FR_POLLING_INTERVAL = int(_get_env("form_recognizer_polling_interval", "5") or 5
 COSMOS_URI = _get_env("cosmos_uri", "")
 COSMOS_KEY = _get_env("cosmos_key", "")
 COSMOS_DATABASE = _get_env("cosmos_database_name", "SampleDB")
-COSMOS_CONTAINER = _get_env("cosmos_container_name", "Cosmic-CFTC-Container")
+COSMOS_CONTAINER = _get_env("cosmos_container_name", "Cosmic-TechWyns-Container")
 
 PARTITION_KEY = "/source_path"
 
@@ -296,18 +296,18 @@ def process_blob(blob_name: str, container: str = BLOB_CONTAINER) -> dict:
 @app.function_name(name="blob_trigger_ingest")
 @app.blob_trigger(
     arg_name="blob",
-    path="csl14/csl-source/{name}",
+    path="TW14/TW-source/{name}",
     connection="BlobStorageConnectionString",
 )
 def blob_trigger_ingest(blob: func.InputStream):
-    """React to new/updated blobs in csl14/csl-source and sync to Cosmos."""
+    """React to new/updated blobs in TW14/TW-source and sync to Cosmos."""
     logging.info(
         f"Python blob trigger function processed blob: {blob.name} "
         f"({blob.length} bytes)"
     )
     try:
         name = blob.name or ""
-        # blob.name is like "csl14/csl-source/<file>" (container/blob)
+        # blob.name is like "TW14/TW-source/<file>" (container/blob)
         # Normalise to a blob path we can parse.
         if "/" in name and not name.lower().startswith("http"):
             # If it includes the container as first segment, parse it.
@@ -326,20 +326,20 @@ def blob_trigger_ingest(blob: func.InputStream):
 @app.function_name(name="sync_all_blobs")
 @app.queue_trigger(
     arg_name="msg",
-    queue_name="csl-source-sync",
+    queue_name="TW-source-sync",
     connection="AzureWebJobsStorage",
 )
 def sync_all_blobs(msg: func.QueueMessage):
     """Backfill/scan all blobs in the source container and process each.
 
-    Trigger manually by sending any message to the ``csl-source-sync`` queue.
+    Trigger manually by sending any message to the ``TW-source-sync`` queue.
     """
     logging.info(f"sync_all_blobs triggered by message: {msg.get_body().decode('utf-8', 'ignore')}")
     blob_service = get_blob_service_client()
     container_client = blob_service.get_container_client(BLOB_CONTAINER)
 
     count = 0
-    for blob in container_client.list_blobs(name_starts_with="csl-source/"):
+    for blob in container_client.list_blobs(name_starts_with="TW-source/"):
         blob_name = blob.name
         try:
             process_blob(blob_name, BLOB_CONTAINER)
@@ -360,10 +360,10 @@ def main():
     container_client = blob_service.get_container_client(BLOB_CONTAINER)
 
     found = []
-    for blob in container_client.list_blobs(name_starts_with="csl-source/"):
+    for blob in container_client.list_blobs(name_starts_with="TW-source/"):
         found.append(blob.name)
 
-    logging.info(f"Found {len(found)} blobs in {BLOB_CONTAINER}/csl-source/")
+    logging.info(f"Found {len(found)} blobs in {BLOB_CONTAINER}/TW-source/")
     count = 0
     for blob_name in found:
         try:
