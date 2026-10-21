@@ -1,4 +1,4 @@
-# Rebuild & Test Progress — CFTC AI Assistant
+# Rebuild & Test Progress — TechWyns AI Assistant
 
 ## Step 1: Test everything
 - [x] Run pytest test suite (`test_app.py`) — 11 passed, 1 skipped
