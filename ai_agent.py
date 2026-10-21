@@ -205,7 +205,7 @@ def get_response_from_ai_agent(llm_id, query, allow_search, system_prompt, provi
     """Query the Azure OpenAI agent (with optional Cosmos retrieval).
 
     Args:
-        llm_id: Azure OpenAI deployment name (e.g. 'gpt-5-csl14'). If empty/None,
+        llm_id: Azure OpenAI deployment name (e.g. 'gpt-5-TW14'). If empty/None,
                 the `.env` completion deployment is used.
         query:   User question (str, or list of str).
         allow_search: If True, enable the Cosmos DB retrieval tool.
