@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-rag_core.py — shared backend logic for the CFTC RAG assistant.
+rag_core.py — shared backend logic for the TechWyns RAG assistant.
 
 Extracted from `rag-chatbot.py` so that both the standalone Gradio app and the
 unified merged app (`app.py`) can reuse the same Cosmos DB / Azure OpenAI logic:
@@ -122,9 +122,9 @@ CHUNK_SIZE = 1500
 CHUNK_OVERLAP = 200
 
 # Blob storage configuration (for source links in prompt responses)
-BLOB_ACCOUNT_URL = config.get('blob_storage_url', 'https://stgaicsldev.blob.core.windows.net')
-BLOB_CONTAINER = config.get('blob_storage_container_name', 'csl14')
-BLOB_SOURCE_PREFIX = config.get('blob_folder_path', f'{BLOB_ACCOUNT_URL}/{BLOB_CONTAINER}/csl-source/')
+BLOB_ACCOUNT_URL = config.get('blob_storage_url', 'https://stgaiTWdev.blob.core.windows.net')
+BLOB_CONTAINER = config.get('blob_storage_container_name', 'TW14')
+BLOB_SOURCE_PREFIX = config.get('blob_folder_path', f'{BLOB_ACCOUNT_URL}/{BLOB_CONTAINER}/TW-source/')
 
 
 def build_blob_url(source_filename):
@@ -145,7 +145,7 @@ def build_blob_url(source_filename):
 # Cosmos DB containers (vector-enabled) — LAZY initialization.
 #
 # The Cosmos client & containers are created only on first use (via the
-# `get_cosmos_container` / `get_cftc_container` / `get_cache_container`
+# `get_cosmos_container` / `get_TechWyns_container` / `get_cache_container`
 # helpers below) rather than at import time. This makes the module (and
 # therefore `app.py` / `ai_agent.py` / `backend.py` / the test suite) robust
 # to transient network/DNS outages, because simply importing rag_core no
@@ -211,8 +211,8 @@ def _get_or_create_container(container_id):
     )
 
 
-def get_cftc_container():
-    """Return (and cache) the CFTC document container, creating it if needed."""
+def get_TechWyns_container():
+    """Return (and cache) the TechWyns document container, creating it if needed."""
     return _get_or_create_container(cosmos_collection)
 
 
@@ -256,7 +256,7 @@ class _LazyContainer:
 # Public module-level aliases used by the rest of the codebase. These are lazy
 # proxies, so importing ``rag_core`` (and thus ``app.py`` / ``ai_agent.py`` /
 # ``backend.py``) performs no network I/O at import time.
-cftc_container = _LazyContainer(get_cftc_container)
+TechWyns_container = _LazyContainer(get_TechWyns_container)
 cache_container = _LazyContainer(get_cache_container)
 
 
@@ -366,7 +366,7 @@ def ingest_documents():
     counter = 0
     for obj in items:
         obj[cosmos_vector_property] = generate_embeddings(obj['content'])
-        cftc_container.upsert_item(body=obj)
+        TechWyns_container.upsert_item(body=obj)
         counter += 1
         if counter % 10 == 0:
             print(f"  upserted {counter}/{len(items)}")
@@ -419,8 +419,8 @@ def get_chat_history(container, completions=3):
 
 def generate_completion(user_prompt, vector_search_results, chat_history):
     system_prompt = '''
-    You are an intelligent assistant for CFTC legal documents. You are designed to provide helpful
-    answers to user questions about the documents in your database (CFTC enforcement actions).
+    You are an intelligent assistant for TechWyns legal documents. You are designed to provide helpful
+    answers to user questions about the documents in your database (TechWyns enforcement actions).
     You are friendly, helpful, and informative and can be lighthearted. Be concise in your
     responses, but still friendly.
      - Only answer questions related to the information provided below. Provide at least 3 document
@@ -478,7 +478,7 @@ def get_cache(container, vectors, similarity_score=0.0, num_results=5):
     return list(results)
 
 
-def chat_completion(cache_container, cftcdoc_container, user_input):
+def chat_completion(cache_container, TechWynsdoc_container, user_input):
     print("starting completion")
     user_embeddings = generate_embeddings(user_input)
     cache_results = get_cache(
@@ -490,7 +490,7 @@ def chat_completion(cache_container, cftcdoc_container, user_input):
         return cache_results[0]['completion'], True
 
     print("New result\n")
-    search_results = vector_search(cftcdoc_container, user_embeddings)
+    search_results = vector_search(TechWynsdoc_container, user_embeddings)
 
     print("Getting Chat History\n")
     chat_history = get_chat_history(cache_container, 3)
@@ -570,7 +570,7 @@ def _text_to_format(text, fmt):
         return text
     if fmt == 'eml':
         msg = _email.message_from_string(
-            "From: cftc-assistant@localhost\n"
+            "From: TechWyns-assistant@localhost\n"
             "To: user@localhost\n"
             "Subject: Converted Document\n"
             "MIME-Version: 1.0\n"
