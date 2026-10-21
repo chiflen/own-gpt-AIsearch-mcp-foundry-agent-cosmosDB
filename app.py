@@ -3,7 +3,7 @@
 app.py — Unified Gradio Application
 
 Integrates:
-  1. CFTC RAG Document Q&A (Cosmos DB + Azure OpenAI)
+  1. TechWyns RAG Document Q&A (Cosmos DB + Azure OpenAI)
   2. AI Agent (Azure OpenAI + Cosmos DB retrieval)
   3. Sentiment Analysis (documents, images, text)
 
@@ -29,7 +29,7 @@ import gradio as gr
 # Import RAG core (Cosmos DB, Azure OpenAI, vector search, etc.)
 # ---------------------------------------------------------------------
 from rag_core import (
-    cftc_container,
+    TechWyns_container,
     cache_container,
     chat_completion,
     convert_document,
@@ -63,7 +63,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ====================================================================
-# 1. RAG TAB  (CFTC Document Q&A)
+# 1. RAG TAB  (TechWyns Document Q&A)
 # ====================================================================
 
 
@@ -71,7 +71,7 @@ def rag_user(user_message, chat_history):
     """Handle a RAG Q&A message."""
     start_time = time.time()
     response_payload, cached = chat_completion(
-        cache_container, cftc_container, user_message
+        cache_container, TechWyns_container, user_message
     )
     elapsed_time = round((time.time() - start_time) * 1000, 2)
     details = f"\n (Time: {elapsed_time}ms)"
@@ -123,7 +123,7 @@ def do_translate(text, src, tgt):
 # ====================================================================
 
 ALLOWED_MODELS = [
-    _default_deployment or "gpt-5-csl14",
+    _default_deployment or "gpt-5-TW14",
     "gpt-4o-mini",
     "gpt-4o",
 ]
@@ -282,17 +282,17 @@ def _format_sentiment_results(results, errors):
 # BUILD UNIFIED APP
 # ====================================================================
 
-with gr.Blocks(title="CFTC AI Assistant + Agent", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# CFTC AI Assistant & Agent")
+with gr.Blocks(title="TechWyns AI Assistant + Agent", theme=gr.themes.Soft()) as demo:
+    gr.Markdown("# TechWyns AI Assistant & Agent")
     gr.Markdown("*Developer: Norman Fletcher*")
 
-    with gr.Tab("📄 CFTC Document Q&A"):
-        gr.Markdown("## CFTC AI Assistant — Document Q&A")
+    with gr.Tab("📄 TechWyns Document Q&A"):
+        gr.Markdown("## TechWyns AI Assistant — Document Q&A")
         gr.Markdown(
-            "Ask questions about CFTC enforcement action documents stored in the database."
+            "Ask questions about TechWyns enforcement action documents stored in the database."
         )
 
-        rag_chatbot = gr.Chatbot(label="CFTC AI Assistant", type="tuples")
+        rag_chatbot = gr.Chatbot(label="TechWyns AI Assistant", type="tuples")
         with gr.Row():
             rag_msg = gr.Textbox(
                 label="Ask me about legal document content in the Database!", scale=4
@@ -380,7 +380,7 @@ with gr.Blocks(title="CFTC AI Assistant + Agent", theme=gr.themes.Soft()) as dem
         gr.Markdown("## AI Chatbot Agent — Azure OpenAI + Cosmos DB Retrieval")
         gr.Markdown(
             "Interact with an agent powered by Azure OpenAI. Toggle document "
-            "retrieval to search the CFTC knowledge base in Cosmos DB."
+            "retrieval to search the TechWyns knowledge base in Cosmos DB."
         )
 
         agent_system_prompt = gr.Textbox(
